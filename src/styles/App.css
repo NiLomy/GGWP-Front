@@ -1,0 +1,19 @@
+.page_content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Mediator, Arial,sans-serif;
+    width: 100%;
+}
+input, button {
+    outline: none;
+}
+button {
+    cursor: pointer;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    :root {
+        scroll-behavior: smooth;
+    }
+}
