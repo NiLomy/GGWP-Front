@@ -6,7 +6,7 @@ import Home from "./pages/Home";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import PageNotFound from "./pages/PageNotFound";
-
+import "./styles/fonts.css";
 
 function App() {
     return (

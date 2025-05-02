@@ -17,3 +17,9 @@ button {
         scroll-behavior: smooth;
     }
 }
+
+:root {
+    --primary-color: #3441c1;
+    --secondary-color: #1E1A28;
+    --border-game: #4FACFF;
+}

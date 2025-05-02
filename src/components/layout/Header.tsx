@@ -1,5 +1,5 @@
 import {Link} from "react-router-dom";
-import logo from "../../static/logo.png"
+import logo from "../../static/logo.jpeg"
 import React, {useState} from "react";
 import MenuHeader from "./MenuHeader";
 
@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = () => {
 
 
                 <Link to="/">
-                    <img src={logo} style={{width: '70%'}} alt="emblem"/>
+                    <img src={logo} style={{width: 140}} alt="emblem"/>
                 </Link>
             </div>
 
