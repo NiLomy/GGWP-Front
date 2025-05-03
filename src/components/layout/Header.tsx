@@ -19,6 +19,10 @@ const Header: React.FC<HeaderProps> = () => {
         setOpen(!open);
     }
 
+    function logout() {
+        localStorage.removeItem("jwt");
+    }
+
     return (
         <header>
             {open && <MenuHeader handleMenuLinks={handleMenu}/>}
@@ -42,6 +46,12 @@ const Header: React.FC<HeaderProps> = () => {
                     <Link to="/registration"><button className="registration_button">Регистрация</button></Link>
                     <Link to="/login"><button className="login_button">Войти</button></Link>
                 </div>
+            }
+
+            {localStorage.getItem("jwt") !== null &&
+              <div className="header_footer_buttons">
+                <button className="login_button" onClick={logout}>Выйти из аккаунта</button>
+              </div>
             }
         </header>
     )
