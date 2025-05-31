@@ -46,9 +46,9 @@ const LoginForm: React.FC<LoginFormProps> = ({location}) => {
 
         if (!name || !password) return;
 
-        let person = new Person(nameText, passwordText);
+        let person = new Person(nameText, passwordText, "user");
 
-        let url = apiUrl + (location === "registration" ? '/registration' : '/login');
+        let url = apiUrl + (location === "registration" ? '/auth/register/' : '/auth/login/');
         fetch(url, {
             method: 'POST',
             credentials: "same-origin",
@@ -57,25 +57,35 @@ const LoginForm: React.FC<LoginFormProps> = ({location}) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(person),
-        }).then(function (response) {
-            response.json()
-                .then(function (data) {
-                    if (data["header"] !== "error") {
-                        localStorage.setItem("jwt", data["content"]);
-                        if (data["content"].includes('*')) {
-                            let parts = data["content"].split("*")
-                            localStorage.setItem("admin", parts[1]);
-                            localStorage.setItem("jwt", parts[0]);
-                        }
+        })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    if (response.ok) {
+                        localStorage.setItem("access", data.access);
+                        localStorage.setItem("refresh", data.refresh);
                         window.location.assign(appUrl === undefined ? 'http://localhost:3000' : appUrl);
                     } else {
-                        setPasswordError(data["content"]);
+                        let errorMessage = "Ошибка входа или регистрации";
+
+                        if (data.detail) {
+                            errorMessage = data.detail;
+                        } else if (data.non_field_errors && data.non_field_errors.length > 0) {
+                            errorMessage = data.non_field_errors[0];
+                        } else {
+                            const firstKey = Object.keys(data)[0];
+                            if (firstKey && Array.isArray(data[firstKey])) {
+                                errorMessage = data[firstKey][0];
+                            }
+                        }
+
+                        setPasswordError(errorMessage);
                     }
-                })
-        }).catch(function (error) {
-            console.log('There has been a problem with your fetch operation: ' + error.message);
-            throw error;
-        });
+                });
+            })
+            .catch(function (error) {
+                console.log('There has been a problem with your fetch operation: ' + error.message);
+                throw error;
+            });
     }
 
     function handlePasswordInput(e: React.ChangeEvent<HTMLInputElement>) {

@@ -1,10 +1,12 @@
 export class Person {
-    name: string;
+    username: string;
     password?: string;
+    role?: string;
 
 
-    constructor(name: string, password?: string) {
-        this.name = name;
+    constructor(username: string, password?: string, role?: string) {
+        this.username = username;
         this.password = password;
+        this.role = role;
     }
 }

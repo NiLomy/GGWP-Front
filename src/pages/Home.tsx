@@ -1,8 +1,7 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {Helmet, HelmetProvider} from 'react-helmet-async';
 import "../styles/home.css";
 import gamepad from "../static/device-gamepad-2.svg";
-import Select from "react-select";
 import {Game} from "../models/Game";
 import Popup from "../components/Popup";
 import {Swiper, SwiperSlide} from 'swiper/react';
@@ -12,6 +11,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
+import GameSelector from "../components/GameSelector";
 
 type Option = {
     value: string;
@@ -20,72 +20,33 @@ type Option = {
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
-const Home: React.FC<{}> = () => {
-    const [games, setGames] = useState<Option[]>(
-        Array.from({length: 1000}, (_, i) => ({
-            value: `${i + 1}`,
-            label: `Игра ${i + 1}`
-        }))
-    );
-    const [isLoading, setIsLoading] = useState(false);
+interface FetchOptions extends RequestInit {
+    headers?: HeadersInit;
+}
 
+const Home: React.FC<{}> = () => {
     const [selectedFirstGame, setSelectedFirstGame] = useState<Option | null>(null);
     const [selectedSecondGame, setSelectedSecondGame] = useState<Option | null>(null);
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [pairedGames, setPairedGames] = useState<Array<Game> | null>(null);
 
-    useEffect(() => {
-        const fetchGames = async () => {
-            setIsLoading(true);
-            try {
-                const response = await fetch(apiUrl + '/games');
-
-                const data: Game[] = await response.json();
-
-                const formattedGames = data.map(game => ({
-                    value: game.id.toString(),
-                    label: game.name
-                }));
-
-                setGames(formattedGames);
-            } catch (err) {
-
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchGames();
-    }, []);
-
-    if (isLoading) {
-        return <div className="home_block home_title">Загружаем игры...</div>;
-    }
-
     function handleButtonClick() {
-        if (localStorage.getItem("jwt") === null) {
+        if (localStorage.getItem("access") === null) {
             setIsPopupVisible(true);
             return;
         }
         if (selectedFirstGame === null || selectedSecondGame === null) {
             return;
         }
-        fetch(apiUrl + "/match?id=" + selectedFirstGame?.value + "&id=" + selectedSecondGame?.value)
+        fetchWithAuthRetry(apiUrl + "/games/recommend/?id1=" + selectedFirstGame?.value + "&id2=" + selectedSecondGame?.value)
             .then((resp) => {
                 resp.json()
                     .then(data => {
                         setPairedGames(data);
                     })
             })
-            .catch(() => {
-                setPairedGames([new Game(2, "Имя", "Описание", "Story",
-                    new Date(2023, 10, 2), "5.0", ["Жанр 1", "Жанр 2"]),
-                    new Game(3, "Имя", "Когда злой дух Кромешник посягает на самое дорогое – детские " +
-                        "мечты, Северянин, Ледяной Джек, Кролик, Зубная Фея и Песочный Человек впервые объединяются, " +
-                        "чтобы создать команду Хранителей снов...",
-                        "Когда злой дух Кромешник посягает на самое дорогое – детские мечты, Северянин, Ледяной " +
-                        "Джек, Кролик, Зубная Фея и Песочный Человек впервые объединяются, чтобы создать команду Хранителей снов...",
-                        new Date(2023, 10, 2), "5.0", ["Жанр 1", "Жанр 2"])])
+            .catch((e) => {
+                console.log(e);
             })
     }
 
@@ -107,9 +68,9 @@ const Home: React.FC<{}> = () => {
                             <img src={gamepad} alt="gamepad"/>
                         </div>
                         <div className="select_calculator">
-                            <Select defaultValue={selectedFirstGame}
-                                    onChange={setSelectedFirstGame}
-                                    options={games}/>
+                            <GameSelector
+                                onSelect={setSelectedFirstGame}
+                            />
                         </div>
                     </div>
 
@@ -118,13 +79,13 @@ const Home: React.FC<{}> = () => {
                             <img src={gamepad} alt="gamepad"/>
                         </div>
                         <div className="select_calculator">
-                            <Select defaultValue={selectedSecondGame}
-                                    onChange={setSelectedSecondGame}
-                                    options={games}/>
+                            <GameSelector
+                                onSelect={setSelectedSecondGame}
+                            />
                         </div>
                     </div>
                 </div>
-                <button onClick={handleButtonClick} className="game_pick_button">Подобрать игру</button>
+                <button type="button" onClick={handleButtonClick} className="game_pick_button">Подобрать игру</button>
 
                 {pairedGames != null &&
                   <Swiper
@@ -160,18 +121,18 @@ const Home: React.FC<{}> = () => {
                                   <div className="paired_game_content">
                                       <div className="paired_game_title">{game.name}</div>
                                       <div className="paired_game_year_rating">
-                                          <span>{game.release_date.getFullYear()}</span>
+                                          <span>{game.release_date}</span>
                                           <span className="dot">•</span>
                                           <span>{game.rating}</span>
                                       </div>
                                       <div className="genre_title">Жанр:
                                           {game.genres.map((genre, index) => (
-                                              <span key={index} className="genre_item">
-                                                  {genre}
+                                              <span key={index} className="genre_item">{genre.name}
                                                   {index < game.genres.length - 1 && ', '}
                                               </span>
                                           ))}
                                       </div>
+
                                       <div className="genre_title" style={{marginTop: 5}}>Описание:
                                           <span className="genre_item">
                                                   {game.description}
@@ -185,12 +146,70 @@ const Home: React.FC<{}> = () => {
                   </Swiper>
                 }
             </div>
-            {localStorage.getItem("jwt") === null &&
+            {localStorage.getItem("access") === null &&
               <Popup isVisible={isPopupVisible}
                      setVisibleFalse={setIsPopupVisible}/>
             }
         </div>
     )
+
+    function refreshAccessToken(): Promise<string> {
+        const refreshToken = localStorage.getItem("refresh");
+        if (!refreshToken) {
+            return Promise.reject(new Error("No refresh token found"));
+        }
+
+        return fetch(`${apiUrl}/api/token/refresh/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({refresh: refreshToken})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    localStorage.removeItem('access');
+                    localStorage.removeItem('refresh');
+                    window.location.assign('/');
+                }
+                return response.json();
+            })
+            .then((data: { access: string }) => {
+                localStorage.setItem("access", data.access);
+                return data.access;
+            });
+    }
+
+    function fetchWithAuthRetry(url: string, options: FetchOptions = {}): Promise<Response> {
+        const accessToken = localStorage.getItem("access") || "";
+
+        const headers = {
+            ...options.headers,
+            'Authorization': 'Bearer ' + accessToken
+        };
+
+        return fetch(url, {
+            ...options,
+            headers,
+        }).then(response => {
+            if (response.status === 401) {
+                // Access token просрочен, обновим
+                return refreshAccessToken().then(newAccess => {
+                    // Повторим запрос с новым токеном
+                    const retryHeaders = {
+                        ...options.headers,
+                        'Authorization': 'Bearer ' + newAccess
+                    };
+                    return fetch(url, {
+                        ...options,
+                        headers: retryHeaders
+                    });
+                });
+            }
+            return response;
+        });
+    }
+
 }
 
 export default Home;

@@ -14,9 +14,9 @@ function App() {
             <Layout>
                 <Routes>
                     <Route path="/" element={<Home/>}/>
-                    <Route path="/registration" element={localStorage.getItem("jwt") === null ?
+                    <Route path="/registration" element={localStorage.getItem("access") === null ?
                         <Registration/> : <Home/>}/>
-                    <Route path="/login" element={localStorage.getItem("jwt") === null ?
+                    <Route path="/login" element={localStorage.getItem("access") === null ?
                         <Login/> : <Home/>}/>
                     <Route path="*" element={<PageNotFound/>}/>
                 </Routes>

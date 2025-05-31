@@ -3,6 +3,8 @@ import logo from "../../static/logo.jpeg"
 import React, {useState} from "react";
 import MenuHeader from "./MenuHeader";
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 interface HeaderProps {
 }
 
@@ -20,7 +22,17 @@ const Header: React.FC<HeaderProps> = () => {
     }
 
     function logout() {
-        localStorage.removeItem("jwt");
+        fetch(apiUrl + '/logout/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ refresh: localStorage.getItem('refresh') })
+        }).then(() => {
+            localStorage.removeItem('access');
+            localStorage.removeItem('refresh');
+            window.location.assign('/login');
+        });
     }
 
     return (
@@ -41,14 +53,14 @@ const Header: React.FC<HeaderProps> = () => {
                 </Link>
             </div>
 
-            {localStorage.getItem("jwt") === null &&
+            {localStorage.getItem("access") === null &&
                 <div className="header_footer_buttons">
                     <Link to="/registration"><button className="registration_button">Регистрация</button></Link>
                     <Link to="/login"><button className="login_button">Войти</button></Link>
                 </div>
             }
 
-            {localStorage.getItem("jwt") !== null &&
+            {localStorage.getItem("access") !== null &&
               <div className="header_footer_buttons">
                 <button className="login_button" onClick={logout}>Выйти из аккаунта</button>
               </div>

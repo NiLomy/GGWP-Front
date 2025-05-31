@@ -3,13 +3,12 @@ export class Game {
     name: string;
     description: string;
     storyline: string;
-    release_date: Date;
+    release_date: string;
     rating: string;
-    genres: string[];
+    genres: Genre[];
 
-
-    constructor(id: number, name: string, description: string, storyline: string, release_date: Date,
-                rating: string, genres: string[]) {
+    constructor(id: number, name: string, description: string, storyline: string, release_date: string,
+                rating: string, genres: Genre[]) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -18,4 +17,9 @@ export class Game {
         this.rating = rating;
         this.genres = genres;
     }
+}
+
+export interface Genre {
+    id: number;
+    name: string;
 }
