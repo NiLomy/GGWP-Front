@@ -16,6 +16,7 @@ import GameSelector from "../components/GameSelector";
 type Option = {
     value: string;
     label: string;
+    image_url: string;
 };
 
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -47,7 +48,7 @@ const Home: React.FC<{}> = () => {
             })
             .catch((e) => {
                 console.log(e);
-            })
+            });
     }
 
     return (
@@ -65,8 +66,11 @@ const Home: React.FC<{}> = () => {
                 <div className="games_picker">
                     <div className="game_block">
                         <div className="game_img">
-                            <img src={gamepad} alt="gamepad"/>
-                        </div>
+                            {selectedFirstGame?.image_url ? (
+                                <img src={selectedFirstGame.image_url} alt={selectedFirstGame.label}/>
+                            ) : (
+                                <img src={gamepad} alt="gamepad"/>
+                            )}                        </div>
                         <div className="select_calculator">
                             <GameSelector
                                 onSelect={setSelectedFirstGame}
@@ -76,7 +80,11 @@ const Home: React.FC<{}> = () => {
 
                     <div className="game_block">
                         <div className="game_img">
-                            <img src={gamepad} alt="gamepad"/>
+                            {selectedSecondGame?.image_url ? (
+                                <img src={selectedSecondGame.image_url} alt={selectedSecondGame.label}/>
+                            ) : (
+                                <img src={gamepad} alt="gamepad"/>
+                            )}
                         </div>
                         <div className="select_calculator">
                             <GameSelector
@@ -116,7 +124,7 @@ const Home: React.FC<{}> = () => {
                                        style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
                               <div className="paired_game">
                                   <div className="paired_game_img_block">
-                                      <img className="paired_game_img" src={gamepad} alt="paired_game"/>
+                                      <img className="paired_game_img" src={game.image_url} alt="paired_game"/>
                                   </div>
                                   <div className="paired_game_content">
                                       <div className="paired_game_title">{game.name}</div>

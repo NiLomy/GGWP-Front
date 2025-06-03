@@ -4,15 +4,12 @@ import "../styles/games.css"
 type Option = {
     value: string;
     label: string;
+    image_url: string;
 };
 
 interface GameSelectorProps {
     onSelect: (option: Option) => void;
     placeholder?: string;
-}
-
-interface FetchOptions extends RequestInit {
-    headers?: HeadersInit;
 }
 
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -52,11 +49,12 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, placeholder = "В
     const fetchOptions = async (term: string) => {
         setIsLoading(true);
         try {
-            const response = await fetchWithAuthRetry(`${apiUrl}/games?search=${term}`);
+            const response = await fetch(`${apiUrl}/games?search=${term}`);
             const data = await response.json();
             const formatted = data.map((game: any) => ({
                 value: game.id.toString(),
-                label: game.name
+                label: game.name,
+                image_url: game.image_url
             }));
             setOptions(formatted);
         } catch (err) {
@@ -115,61 +113,6 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, placeholder = "В
             )}
         </div>
     );
-
-    function fetchWithAuthRetry(url: string, options: FetchOptions = {}): Promise<Response> {
-        const accessToken = localStorage.getItem("access") || "";
-
-        const headers = {
-            ...options.headers,
-            'Authorization': 'Bearer ' + accessToken
-        };
-
-        return fetch(url, {
-            ...options,
-            headers,
-        }).then(response => {
-            if (response.status === 401) {
-                return refreshAccessToken().then(newAccess => {
-                    const retryHeaders = {
-                        ...options.headers,
-                        'Authorization': 'Bearer ' + newAccess
-                    };
-                    return fetch(url, {
-                        ...options,
-                        headers: retryHeaders
-                    });
-                });
-            }
-            return response;
-        });
-    }
-
-    function refreshAccessToken(): Promise<string> {
-        const refreshToken = localStorage.getItem("refresh");
-        if (!refreshToken) {
-            return Promise.reject(new Error("No refresh token found"));
-        }
-
-        return fetch(`${apiUrl}/api/token/refresh/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ refresh: refreshToken })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    localStorage.removeItem('access');
-                    localStorage.removeItem('refresh');
-                    window.location.assign('/');
-                }
-                return response.json();
-            })
-            .then((data: { access: string }) => {
-                localStorage.setItem("access", data.access);
-                return data.access;
-            });
-    }
 };
 
 export default GameSelector;
